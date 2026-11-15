@@ -29,24 +29,25 @@ app.use(
 const PORT = 8080;
 const CONNECTION_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
-async function main(CONNECTION_URL) {
+const main = async (CONNECTION_URL) => {
     await mongoose.connect(CONNECTION_URL);
-}
+};
 
-async function initdatabase(bulkData = []) {
+const initdatabase = async (bulkData = []) => {
     await Listing.deleteMany({});
     await Listing.insertMany(bulkData);
-}
+};
 
-function validateListing(req, res, next) {
+const validateListing = (req, res, next) => {
     const { error } = listingSchema.validate(req.body);
+
     if (error) {
         const msg = error.details.map((el) => el.message).join(", ");
         throw new ExpressError(msg, 400);
-    } else {
-        next();
     }
-}
+
+    next();
+};
 
 main(CONNECTION_URL, PORT)
     .then(() => {

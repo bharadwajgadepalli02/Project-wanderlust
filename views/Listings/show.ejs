@@ -1,0 +1,49 @@
+<% layout('layouts/boilerplate.ejs') %>
+<h3 class="text-center">View Listing</h3>
+<div class="row">
+    <div class="col-8 offset-2">
+        <div class="card">
+            <div class="text-center">
+                <img
+                    style="width: 25rem"
+                    src="<%= listing.image.url %>"
+                    class="card-img-top"
+                    alt="<%= listing.title %>"
+                />
+            </div>
+            <div class="card-body">
+                <h5 class="card-title"><%= listing.title %></h5>
+                <p class="card-text"><%= listing.description %></p>
+                <div class="card-text">
+                    <ul>
+                        <li>
+                            Price: &#8377;
+                            <%= listing?.price?.toLocaleString("en-IN") || 'Not specified' %>
+                        </li>
+                        <li>
+                            Location:
+                            <%= listing?.location || 'Not specified' %>
+                        </li>
+                        <li>
+                            Country:
+                            <%= listing?.country || 'Not specified' %>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="buttons-view col-8 offset-2">
+        <a href="/Listings/<%= listing._id %>/new"
+            ><button class="btn btn-sm btn-info">Edit Listing</button>
+        </a>
+        <a href="/Listings/">
+            <button class="btn btn-sm btn-dark">Go to all Listings</button>
+        </a>
+        <form
+            method="POST"
+            action="/Listings/<%= listing._id %>?_method=DELETE">
+            <button class="btn btn-sm btn-danger">Delete Listing</button>
+        </form>
+    </div>
+</div>

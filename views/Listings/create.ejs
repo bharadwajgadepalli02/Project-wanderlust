@@ -1,0 +1,95 @@
+<% layout('layouts/boilerplate.ejs') -%>
+<div class="row">
+    <div class="col-8 offset-2 mt-3">
+        <h3>Create new listing</h3>
+        <form 
+            method="POST" class="needs-validation" novalidate
+            action="/Listings<%= listing._id ? `/${listing._id}?_method=PATCH` : '' %>">
+            <div class="mb-3">
+                <label class="form-label" for="title">Title</label><br />
+                <input
+                    name="listing[title]"
+                    id="title"
+                    placeholder="Enter an effective Title"
+                    value="<%= listing?.title || '' %>"
+                    class="form-control"
+                    aria-describedby="titleHelp"
+                    required    
+                />
+                <div id="titleHelp" class="form-text">
+                    Please share a title to identify place
+                </div>
+                <div id="titleFeedback" class="invalid-feedback">
+                    Please choose a Title.
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <textarea
+                    placeholder="Provide Description"
+                    class="form-control"
+                    name="listing[description]"
+                    id="description"
+                    required
+                ><%= listing?.description || '' %></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="imageUrl">Image url</label><br />
+                <input
+                    placeholder="represntation of place"
+                    class="form-control"
+                    name="listing[image][url]"
+                    id="imageUrl"
+                    value="<%= listing?.image?.url || '' %>"
+                />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="price">Price</label><br />
+                <input
+                    placeholder="Eg: 20,000"
+                    class="form-control"
+                    name="listing[price]"
+                    id="price"
+                    value="<%= listing?.price || '' %>"
+                    required
+                />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="location">Location</label><br />
+                <input
+                    placeholder="Eg: Hyderabad"
+                    class="form-control"
+                    name="listing[location]"
+                    id="location"
+                    value="<%= listing?.location || '' %>"
+                    required
+                />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="country">Country</label><br />
+                <input
+                    placeholder="Eg: India"
+                    class="form-control"
+                    name="listing[country]"
+                    id="country"
+                    value="<%= listing?.country || '' %>"
+                    required
+                />
+            </div>
+            <div class="buttons-view">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    Submit
+                </button>
+                <a href="/Listings/" class="btn btn-sm btn-dark">
+                    Go to all Listings
+                </a>
+                <% if (listing?._id) { %>
+                <a href="/Listings/<%= listing._id %>"
+                    class="btn btn-sm btn-info">
+                    Go Back To Listing
+                </a>
+                <% } %>
+            </div>
+        </form>
+    </div>
+</div>

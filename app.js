@@ -8,7 +8,8 @@ import methodOverride from "method-override";
 import ejsmate from "ejs-mate";
 import wrapAsync from "./utils/wrapAsync.js";
 import ExpressError from "./utils/ExpressError.js";
-import listingSchema from "./schema.js";
+import { listingSchema, reviewSchema } from "./schema.js";
+import { Review } from "./models/review.js";
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -29,17 +30,28 @@ app.use(
 const PORT = 8080;
 const CONNECTION_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
-const main = async (CONNECTION_URL) => {
+const main = wrapAsync(async (CONNECTION_URL) => {
     await mongoose.connect(CONNECTION_URL);
-};
+});
 
-const initdatabase = async (bulkData = []) => {
+const initdatabase = wrapAsync(async (bulkData = []) => {
     await Listing.deleteMany({});
     await Listing.insertMany(bulkData);
-};
+});
 
 const validateListing = (req, res, next) => {
     const { error } = listingSchema.validate(req.body);
+
+    if (error) {
+        const msg = error.details.map((el) => el.message).join(", ");
+        throw new ExpressError(msg, 400);
+    }
+
+    next();
+};
+
+const validateReview = (req, res, next) => {
+    const { error } = reviewSchema.validate(req.body);
 
     if (error) {
         const msg = error.details.map((el) => el.message).join(", ");
@@ -70,22 +82,22 @@ app.get(
     wrapAsync(async (req, res) => {
         const allListings = await Listing.find({});
         res.render("Listings/index.ejs", { allListings });
-    }),
+    })
 );
 
 app.get(
     "/Listings/new",
     wrapAsync(async (req, res) => {
         res.render("Listings/create.ejs", { listing: { image: {} } });
-    }),
+    })
 );
 
 app.get(
     "/Listings/:id",
     wrapAsync(async (req, res) => {
-        const listing = await Listing.findById(req.params.id);
+        const listing = await Listing.findById(req.params.id).populate("reviews");
         res.render("Listings/show.ejs", { listing });
-    }),
+    })
 );
 
 app.get(
@@ -93,7 +105,7 @@ app.get(
     wrapAsync(async (req, res) => {
         const listing = await Listing.findById(req.params.id);
         res.render("Listings/create.ejs", { listing });
-    }),
+    })
 );
 
 app.post(
@@ -103,7 +115,7 @@ app.post(
         const listing = new Listing(req.body.listing);
         await listing.save();
         res.redirect("/Listings");
-    }),
+    })
 );
 
 app.patch(
@@ -114,7 +126,7 @@ app.patch(
             ...req.body.listing,
         });
         res.redirect("/Listings");
-    }),
+    })
 );
 
 app.delete(
@@ -123,7 +135,32 @@ app.delete(
         const listing = await Listing.findByIdAndDelete(req.params.id);
         console.log("Deleted Listing:", listing);
         res.redirect("/Listings");
-    }),
+    })
+);
+
+app.post(
+    "/Listings/:id/reviews",
+    validateReview,
+    wrapAsync(async (req, res) => {
+        const listing = await Listing.findById(req.params.id);
+        const review = new Review(req.body.review);
+        listing.reviews.push(review);
+        await review.save();
+        await listing.save();
+        res.redirect(`/Listings/${listing._id}`);
+    })
+);
+
+app.delete(
+    "/Listings/:id/reviews/:reviewId",
+    wrapAsync(async (req, res) => {
+        const { id, reviewId } = req.params;
+        const listing = await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+        const review = await Review.findByIdAndDelete(reviewId);
+        console.log("Deleted Review:", review);
+        console.log("Deleted Review from Listing:", listing);
+        res.redirect(`/Listings/${id}`);
+    })
 );
 
 app.use((req, res, next) => {

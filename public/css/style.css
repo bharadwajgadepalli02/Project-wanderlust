@@ -105,5 +105,14 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 10%;
-    padding-bottom: 10%;
+}
+
+.review-list {
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.list-group-item {
+    width: 26rem;
 }

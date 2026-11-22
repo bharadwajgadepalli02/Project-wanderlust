@@ -8,8 +8,15 @@ import methodOverride from "method-override";
 import ejsmate from "ejs-mate";
 import wrapAsync from "./utils/wrapAsync.js";
 import ExpressError from "./utils/ExpressError.js";
-import { listingSchema, reviewSchema } from "./schema.js";
-import { Review } from "./models/review.js";
+import session from "express-session";
+import flash from "connect-flash";
+import passport from "passport";
+import LocalStrategy from "passport-local";
+import { User } from "./models/user.js";
+
+import { listingRouter } from "./routes/listingRoute.js";
+import { reviewRouter } from "./routes/reviewRoue.js";
+import { userRouter } from "./routes/userRoute.js";
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,11 +28,7 @@ app.use(methodOverride("_method"));
 app.engine("ejs", ejsmate);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "node_modules/bootstrap/dist")));
-app.use(
-    express.static(
-        path.join(__dirname, "node_modules/@fortawesome/fontawesome-free"),
-    ),
-);
+app.use(express.static(path.join(__dirname, "node_modules/@fortawesome/fontawesome-free")));
 
 const PORT = 8080;
 const CONNECTION_URL = "mongodb://127.0.0.1:27017/wanderlust";
@@ -39,28 +42,6 @@ const initdatabase = wrapAsync(async (bulkData = []) => {
     await Listing.insertMany(bulkData);
 });
 
-const validateListing = (req, res, next) => {
-    const { error } = listingSchema.validate(req.body);
-
-    if (error) {
-        const msg = error.details.map((el) => el.message).join(", ");
-        throw new ExpressError(msg, 400);
-    }
-
-    next();
-};
-
-const validateReview = (req, res, next) => {
-    const { error } = reviewSchema.validate(req.body);
-
-    if (error) {
-        const msg = error.details.map((el) => el.message).join(", ");
-        throw new ExpressError(msg, 400);
-    }
-
-    next();
-};
-
 main(CONNECTION_URL, PORT)
     .then(() => {
         console.log("Database is connected successfully");
@@ -73,95 +54,42 @@ main(CONNECTION_URL, PORT)
         console.error(error);
     });
 
+const sessionOptions = {
+    secret: "secretcode",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+};
+
+app.use(session(sessionOptions));
+app.use(flash());
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+app.use((req, res, next) => {
+    res.locals.success = req.flash("success");
+    res.locals.update = req.flash("update");
+    res.locals.error = req.flash("error");
+    res.locals.currentUser = req.user;
+    next();
+});
+
 app.get("/", (req, res) => {
     res.redirect("/Listings");
 });
 
-app.get(
-    "/Listings",
-    wrapAsync(async (req, res) => {
-        const allListings = await Listing.find({});
-        res.render("Listings/index.ejs", { allListings });
-    })
-);
-
-app.get(
-    "/Listings/new",
-    wrapAsync(async (req, res) => {
-        res.render("Listings/create.ejs", { listing: { image: {} } });
-    })
-);
-
-app.get(
-    "/Listings/:id",
-    wrapAsync(async (req, res) => {
-        const listing = await Listing.findById(req.params.id).populate("reviews");
-        res.render("Listings/show.ejs", { listing });
-    })
-);
-
-app.get(
-    "/Listings/:id/new",
-    wrapAsync(async (req, res) => {
-        const listing = await Listing.findById(req.params.id);
-        res.render("Listings/create.ejs", { listing });
-    })
-);
-
-app.post(
-    "/Listings",
-    validateListing,
-    wrapAsync(async (req, res) => {
-        const listing = new Listing(req.body.listing);
-        await listing.save();
-        res.redirect("/Listings");
-    })
-);
-
-app.patch(
-    "/Listings/:id",
-    validateListing,
-    wrapAsync(async (req, res) => {
-        const listing = await Listing.findByIdAndUpdate(req.params.id, {
-            ...req.body.listing,
-        });
-        res.redirect("/Listings");
-    })
-);
-
-app.delete(
-    "/Listings/:id",
-    wrapAsync(async (req, res) => {
-        const listing = await Listing.findByIdAndDelete(req.params.id);
-        console.log("Deleted Listing:", listing);
-        res.redirect("/Listings");
-    })
-);
-
-app.post(
-    "/Listings/:id/reviews",
-    validateReview,
-    wrapAsync(async (req, res) => {
-        const listing = await Listing.findById(req.params.id);
-        const review = new Review(req.body.review);
-        listing.reviews.push(review);
-        await review.save();
-        await listing.save();
-        res.redirect(`/Listings/${listing._id}`);
-    })
-);
-
-app.delete(
-    "/Listings/:id/reviews/:reviewId",
-    wrapAsync(async (req, res) => {
-        const { id, reviewId } = req.params;
-        const listing = await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
-        const review = await Review.findByIdAndDelete(reviewId);
-        console.log("Deleted Review:", review);
-        console.log("Deleted Review from Listing:", listing);
-        res.redirect(`/Listings/${id}`);
-    })
-);
+app.use("/Listings", listingRouter);
+app.use("/Listings/:id/reviews", reviewRouter);
+app.use("/", userRouter);
 
 app.use((req, res, next) => {
     next(new ExpressError("sorry!, <b>Page Not Found.</b>", 404));

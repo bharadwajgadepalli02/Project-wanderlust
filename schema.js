@@ -20,4 +20,12 @@ const reviewSchema = Joi.object({
     }).required()
 });
 
-export { listingSchema, reviewSchema };
+const userSchema = Joi.object({
+    user: Joi.object({
+        email: Joi.string().email().required(),
+        username: Joi.string().required(),
+        password: Joi.string().required()
+    }).required()
+});
+
+export { listingSchema, reviewSchema, userSchema };

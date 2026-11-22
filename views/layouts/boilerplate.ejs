@@ -18,9 +18,11 @@
     <body class="d-flex flex-column">
         <%- include("../includes/navbar.ejs") %>
         <div class="container flex-grow-1">
+            <%- include("../includes/flashMessages.ejs") %>
             <%- body %>
         </div>
         <%- include("../includes/footer.ejs") %>
+        <script src="/js/bootstrap.bundle.min.js"></script>
         <script src="/js/formValidation.js"></script>
     </body>
 </html>

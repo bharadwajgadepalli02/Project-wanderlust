@@ -12,6 +12,10 @@
                 </div>
                 <div class="card-body">
                     <p class="card-text">
+                        <strong>Owned by:</strong>
+                        <i><%= listing?.owner?.username || 'Not specified' %></i>
+                    </p>
+                    <p class="card-text">
                         <%= listing.description %>
                     </p>
                     <div class="card-text">
@@ -34,49 +38,59 @@
             </div>
         </div>
         <div class="buttons-view col-8 offset-2">
-            <a href="/Listings/<%= listing._id %>/new"><button class="btn btn-sm btn-info">Edit Listing</button>
-            </a>
+            <% if (listing?.owner?._id?.toString() === currentUser?._id?.toString()) { %>
+                <a href="/Listings/<%= listing._id %>/edit"><button class="btn btn-sm btn-info">Edit Listing</button>
+                </a>
+            <% } %>
             <a href="/Listings/">
                 <button class="btn btn-sm btn-dark">Go to all Listings</button>
             </a>
-            <form method="POST" action="/Listings/<%= listing._id %>?_method=DELETE">
-                <button class="btn btn-sm btn-danger">Delete Listing</button>
-            </form>
+            <% if (listing?.owner?._id?.toString() === currentUser?._id?.toString()) { %>
+                <form method="POST" action="/Listings/<%= listing._id %>?_method=DELETE">
+                    <button class="btn btn-sm btn-danger">Delete Listing</button>
+                </form>
+            <% } %>
         </div>
         <div class="col-8 offset-2">
-            <hr />
-            <h4>Leave a Review</h4>
-            <form novalidate class="needs-validation" method="POST" action="/Listings/<%= listing._id %>/reviews">
-                <div class="form-group">
-                    <label for="rating" class="form-label">Rating:</label>
-                    <input type="range" class="form-range" min="1" max="5" id="rating" name="review[rating]" step="1"
-                        value="1" required />
-                    <div class="invalid-feedback">Please provide a rating between 1 and 5.</div>
-                </div>
-                <div class="form-group">
-                    <label for="comment" class="form-label">Comment:</label>
-                    <textarea class="form-control" id="comment" name="review[comment]" rows="3" required></textarea>
-                    <div class="invalid-feedback">Please enter your comment.</div>
-                </div>
-                <button type="submit" class="btn btn-sm btn-primary mt-3 mb-3">Submit Review</button>
-            </form>
+            <% if(currentUser) { %>                
+                <hr />
+                <h4>Leave a Review</h4>
+                <form novalidate class="needs-validation" method="POST" action="/Listings/<%= listing._id %>/reviews">
+                    <div class="form-group">
+                        <label for="rating" class="form-label">Rating:</label>
+                        <input type="range" class="form-range" min="1" max="5" id="rating" name="review[rating]" step="1"
+                            value="1" required />
+                        <div class="invalid-feedback">Please provide a rating between 1 and 5.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment" class="form-label">Comment:</label>
+                        <textarea class="form-control" id="comment" name="review[comment]" rows="3" required></textarea>
+                        <div class="invalid-feedback">Please enter your comment.</div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary mt-3 mb-3">Submit Review</button>
+                </form>
+            <% } else { %>
+                <p class="text-center">Please <a href="/login">log in</a> to leave a review.</p>
+            <% } %>
             <hr />
             <h4>Reviews</h4>
             <% if (!listing?.reviews?.length) { %>
                 <p>No reviews yet.</p>
             <% } else { %>
                 <ul class="list-group review-list mb-3">
-                    <% listing.reviews.forEach(review=> { %>
+                    <% listing.reviews.forEach(review => { %>
                         <li class="list-group-item mb-3">
-                            <strong>User:</strong>
-                            <%= review.user || 'Anonymous' %> <br />
-                            <strong>Rating:</strong>
+                            <strong><i class="fas fa-user"></i></strong>
+                            <%= review.author?.username || 'Anonymous' %> <br />
+                            <strong><i class="fas fa-star"></i></strong>
                             <%= review.rating %> star(s) <br />
-                            <strong>Comment:</strong>
+                            <strong><i class="fas fa-comment"></i></strong>
                             <%= review.comment %>
-                            <form method="POST" action="/Listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
-                                <button class="btn btn-sm btn-danger mt-2">Delete Review</button>
-                            </form>
+                            <% if (review.author?._id?.toString() === currentUser?._id?.toString()) { %>
+                                <form method="POST" action="/Listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+                                    <button class="btn btn-sm btn-danger mt-2">Delete Review</button>
+                                </form>
+                            <% } %>
                         </li>
                     <% }); %>
                 </ul>

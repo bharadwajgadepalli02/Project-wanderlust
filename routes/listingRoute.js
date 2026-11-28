@@ -95,8 +95,8 @@ listingRouter.route("/")
 
                 if (typeof req.file !== "undefined") {
                     newListing.image = {
-                        url: req.file.path,
-                        filename: req.file.filename,
+                        url: req.file.secure_url || req.file.path,
+                        filename: req.file.originalname || req.file.filename,
                     };
                 }
 
@@ -203,8 +203,8 @@ listingRouter.route("/:id")
 
                 if (typeof req.file !== "undefined") {
                     updatedListing.image = {
-                        url: req.file.path,
-                        filename: req.file.filename,
+                        url: req.file.secure_url || req.file.path,
+                        filename: req.file.originalname || req.file.filename,
                     };
                     await updatedListing.save();
 

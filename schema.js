@@ -6,10 +6,24 @@ const listingSchema = Joi.object({
         description: Joi.string().required(),
         image: Joi.object({
             url: Joi.string().allow("", null),
-        }),
+        }).allow("", null).optional(),
         price: Joi.number().positive().required(),
+        tax: Joi.number().min(0).max(100).optional(),
         location: Joi.string().required(),
-        country: Joi.string().required()
+        country: Joi.string().required(),
+        category: Joi.string().valid(
+            "Trending",
+            "Rooms",
+            "Iconic Cities",
+            "Mountains",
+            "Castles",
+            "Amazing Pools",
+            "Camping",
+            "Farms",
+            "Arctic",
+            "Domes",
+            "Boats"
+        ).optional()
     }).required()
 });
 

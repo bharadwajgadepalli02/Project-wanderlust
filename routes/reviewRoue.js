@@ -2,12 +2,12 @@ import express from "express";
 import { Listing } from "../models/listing.js";
 import wrapAsync from "../utils/wrapAsync.js";
 import { Review } from "../models/review.js";
-import { isLoggedIn, validateReview } from "../middleware.js";
+import { isLoggedIn, isReviewOwner, validateReview } from "../middleware.js";
 
 const reviewRouter = express.Router({ mergeParams: true });
 
 reviewRouter.post(
-    "",
+    "/",
     isLoggedIn,
     validateReview,
     wrapAsync(async (req, res) => {
@@ -29,6 +29,7 @@ reviewRouter.post(
 reviewRouter.delete(
     "/:reviewId",
     isLoggedIn,
+    isReviewOwner,
     wrapAsync(async (req, res) => {
         const { id, reviewId } = req.params;
         const listing = await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });

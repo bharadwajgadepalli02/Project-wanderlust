@@ -1,0 +1,58 @@
+.starability-basic {
+    display: block;
+    position: relative;
+    width: 150px;
+    min-height: 30px;
+    padding: 0;
+    border: none;
+}
+
+.starability-basic > input {
+    position: absolute;
+    margin-right: -100%;
+    opacity: 0;
+}
+
+.starability-basic > input:checked ~ label,
+.starability-basic > input:focus ~ label,
+.starability-basic > input:hover ~ label {
+    background-position: 0 -30px;
+}
+
+.starability-basic > input:hover ~ label {
+    color: #ffd700;
+}
+
+.starability-slot {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.starability-slot input {
+    display: none;
+}
+
+.starability-slot label {
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    color: #ccc;
+    font-size: 24px;
+    line-height: 30px;
+    text-align: center;
+    transition: color 0.2s ease;
+}
+
+.starability-slot label:before {
+    content: '\2605';
+}
+
+.starability-slot input:checked ~ label {
+    color: #f5a623;
+}
+
+.starability-slot label:hover,
+.starability-slot label:hover ~ label {
+    color: #f5a623;
+}

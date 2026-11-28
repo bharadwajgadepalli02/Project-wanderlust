@@ -1,8 +1,8 @@
-<nav class="navbar navbar-expand-md bg-light sticky-top">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/">
+<nav class="navbar navbar-expand-md border-bottom sticky-top">
+    <div class="container-fluid px-md-4">
+        <a class="navbar-brand" href="/Listings">
             <i class="fa-solid fa-compass"></i>
-            <span>Wanderlust</span>
+            <span>RoamHaven</span>
         </a>
         <button
             class="navbar-toggler"
@@ -12,18 +12,63 @@
                 <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-                <a class="nav-link" href="/">Home</a>
-                <a class="nav-link" href="/Listings">All Listings</a>
-                <a class="nav-link" href="/Listings/new">Add new Listing</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="/Listings">Explore</a>
             </div>
-            <div class="navbar-nav ms-auto">
-                <% if(!currentUser) { %>
-                <a class="nav-link" href="/signup">Sign Up</a>
-                <a class="nav-link" href="/login">Login</a>
-                <% } else { %>
-                <a class="nav-link" href="/logout">Logout</a>
+
+            <form class="d-flex search-bar my-2 my-md-0" role="search" action="/Listings" method="GET">
+                <input
+                    class="form-control search-input"
+                    type="search"
+                    name="search"
+                    title="Search destinations, title, country..."
+                    placeholder="Search destinations, title, country..."
+                    value="<%= typeof search !== 'undefined' ? search : '' %>"
+                />
+                <% if (typeof currentCategory !== 'undefined' && currentCategory && currentCategory !== 'All') { %>
+                    <input type="hidden" name="category" value="<%= currentCategory %>">
                 <% } %>
+                <button class="btn btn-search" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+
+            <div class="navbar-nav ms-auto align-items-center">
+                <a class="nav-link" href="/Listings/new" title="List your property and host travelers">Host a Haven</a>
+                <% if(!currentUser) { %>
+                <a class="nav-link fw-semibold" href="/signup">Sign up</a>
+                <a class="nav-link fw-semibold" href="/login">Log in</a>
+                <% } else { %>
+                <a class="nav-link fw-semibold" href="/logout">Log out</a>
+                <% } %>
+                <a class="nav-link text-muted ms-md-2" href="/help" title="How to use RoamHaven">
+                    <i class="fa-regular fa-circle-question me-1"></i>Help
+                </a>
+
+                <!-- Theme Color Palette Dropdown -->
+                <div class="dropdown ms-2 me-1">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" id="colorThemeDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Choose Accent Color">
+                        <span class="theme-circle-preview" id="currentThemeCircle"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="colorThemeDropdown" style="min-width: 175px;">
+                        <li><h6 class="dropdown-header px-2 py-1 small text-uppercase fw-bold">Accent Color</h6></li>
+                        <li>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center p-1">
+                                <button type="button" class="color-palette-btn active" data-color="#0d6efd" data-hover="#0b5ed7" style="background-color: #0d6efd;" title="Ocean Blue (Default)"></button>
+                                <button type="button" class="color-palette-btn" data-color="#059669" data-hover="#047857" style="background-color: #059669;" title="Emerald Green"></button>
+                                <button type="button" class="color-palette-btn" data-color="#fe424d" data-hover="#e0323c" style="background-color: #fe424d;" title="Sunset Coral"></button>
+                                <button type="button" class="color-palette-btn" data-color="#7c3aed" data-hover="#6d28d9" style="background-color: #7c3aed;" title="Royal Violet"></button>
+                                <button type="button" class="color-palette-btn" data-color="#d97706" data-hover="#b45309" style="background-color: #d97706;" title="Warm Amber"></button>
+                                <button type="button" class="color-palette-btn" data-color="#e11d48" data-hover="#be123c" style="background-color: #e11d48;" title="Rose Pink"></button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Dark / Light Mode Toggle Button -->
+                <button class="btn btn-sm btn-outline-secondary ms-1 d-flex align-items-center justify-content-center" id="darkModeToggle" type="button" title="Toggle Light / Dark Mode">
+                    <i class="fa-solid fa-moon" id="darkModeIcon"></i>
+                </button>
             </div>
         </div>
     </div>

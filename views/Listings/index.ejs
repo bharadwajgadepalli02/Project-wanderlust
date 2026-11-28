@@ -1,22 +1,183 @@
 <% layout('layouts/boilerplate.ejs') -%>
-<div class="row">
-    <% for (let listing of allListings) { %>
-        <div class="col-md-4">
-            <a href="/Listings/<%= listing._id %>">
-                <div class="card">
-                    <img src="<%= listing.image.url %>" class="card-img-top" alt="<%= listing.title %>" />
-                    <div class="card-img-overlay"></div>
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <%= listing.title %>
-                        </h5>
-                        <p class="card-text">
-                            <%= listing.description %>
-                        </p>
-                        <a href="#" class="btn btn-sm btn-dark mt-1 view-btn">see more</a>
+
+<div class="filters-container my-3">
+    <div class="filters">
+        <a href="/Listings<%= search ? `?search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'All' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-globe"></i></div>
+            <p>All</p>
+        </a>
+        <a href="/Listings?category=Trending<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Trending' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-fire"></i></div>
+            <p>Trending</p>
+        </a>
+        <a href="/Listings?category=Rooms<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Rooms' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-bed"></i></div>
+            <p>Rooms</p>
+        </a>
+        <a href="/Listings?category=Iconic Cities<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Iconic Cities' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-mountain-city"></i></div>
+            <p>Iconic Cities</p>
+        </a>
+        <a href="/Listings?category=Mountains<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Mountains' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-mountain"></i></div>
+            <p>Mountains</p>
+        </a>
+        <a href="/Listings?category=Castles<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Castles' ? 'active-filter' : '' %>">
+            <div><i class="fa-brands fa-fort-awesome"></i></div>
+            <p>Castles</p>
+        </a>
+        <a href="/Listings?category=Amazing Pools<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Amazing Pools' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-person-swimming"></i></div>
+            <p>Amazing Pools</p>
+        </a>
+        <a href="/Listings?category=Camping<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Camping' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-campground"></i></div>
+            <p>Camping</p>
+        </a>
+        <a href="/Listings?category=Farms<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Farms' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-cow"></i></div>
+            <p>Farms</p>
+        </a>
+        <a href="/Listings?category=Arctic<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Arctic' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-snowflake"></i></div>
+            <p>Arctic</p>
+        </a>
+        <a href="/Listings?category=Domes<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Domes' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-igloo"></i></div>
+            <p>Domes</p>
+        </a>
+        <a href="/Listings?category=Boats<%= search ? `&search=${encodeURIComponent(search)}` : '' %>" 
+           class="filter <%= currentCategory === 'Boats' ? 'active-filter' : '' %>">
+            <div><i class="fa-solid fa-ship"></i></div>
+            <p>Boats</p>
+        </a>
+    </div>
+
+    <div class="tax-toggle">
+        <div class="form-check form-switch form-check-reverse">
+            <input class="form-check-input" type="checkbox" role="switch" id="taxSwitch">
+            <label class="form-check-label" for="taxSwitch">Display total after taxes</label>
+        </div>
+    </div>
+</div>
+
+<% if (search || (currentCategory && currentCategory !== 'All')) { %>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <% if (search) { %>
+                <span class="badge bg-secondary me-2">Search: "<%= search %>"</span>
+            <% } %>
+            <% if (currentCategory && currentCategory !== 'All') { %>
+                <span class="badge bg-primary">Category: <%= currentCategory %></span>
+            <% } %>
+            <small class="text-muted ms-2">(Found <%= totalListings %> listing<%= totalListings === 1 ? '' : 's' %>)</small>
+        </div>
+        <a href="/Listings" class="btn btn-sm btn-outline-danger">Clear All Filters</a>
+    </div>
+<% } %>
+
+<div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 g-4 mb-4">
+    <% if (allListings && allListings.length > 0) { %>
+        <% for (let listing of allListings) { %>
+            <div class="col">
+                <a href="/Listings/<%= listing._id %>" class="listing-link">
+                    <div class="card listing-card h-100">
+                        <img 
+                            src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=600' %>" 
+                            class="card-img-top" 
+                            alt="<%= listing.title %>" 
+                        />
+                        <div class="card-img-overlay"></div>
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate"><%= listing.title %></h5>
+                            <p class="card-text mb-1 text-muted text-truncate"><%= listing.location %>, <%= listing.country %></p>
+                            <p class="card-text mb-2">
+                                <span class="fw-bold">&#8377; <%= listing.price?.toLocaleString("en-IN") || 0 %></span> / night
+                                <% const itemTax = listing.tax || 18; %>
+                                <i class="tax-info text-muted ms-2">
+                                    &nbsp;+<%= itemTax %>% GST (&#8377; <%= Math.round((listing.price || 0) * (1 + itemTax / 100)).toLocaleString("en-IN") %>)
+                                </i>
+                            </p>
+                            <span class="category-badge"><%= listing.category || 'Trending' %></span>
+                        </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+        <% } %>
+    <% } else { %>
+        <div class="col-12 text-center py-5">
+            <div class="alert alert-light border py-5">
+                <i class="fa-solid fa-magnifying-glass fa-3x text-muted mb-3"></i>
+                <h4>No listings match your search criteria</h4>
+                <p class="text-muted">Try adjusting your search terms or selecting a different category.</p>
+                <a href="/Listings" class="btn btn-dark mt-2">Explore All Listings</a>
+            </div>
         </div>
     <% } %>
 </div>
+
+<% if (totalPages > 1) { %>
+    <% const queryString = (currentCategory && currentCategory !== 'All' ? `&category=${encodeURIComponent(currentCategory)}` : '') + (search ? `&search=${encodeURIComponent(search)}` : ''); %>
+    <nav aria-label="Listings navigation" class="pagination-container my-4">
+        <ul class="pagination justify-content-center flex-wrap">
+            <!-- First Page -->
+            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                <a class="page-link" 
+                   href="/Listings?page=1<%= queryString %>" 
+                   aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo; First</span>
+                </a>
+            </li>
+
+            <!-- Previous Page -->
+            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                <a class="page-link" 
+                   href="/Listings?page=<%= currentPage - 1 %><%= queryString %>" 
+                   aria-label="Previous">
+                    <span aria-hidden="true">&laquo; Prev</span>
+                </a>
+            </li>
+
+            <!-- Numbered Pages -->
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                    <a class="page-link" 
+                       href="/Listings?page=<%= i %><%= queryString %>">
+                        <%= i %>
+                    </a>
+                </li>
+            <% } %>
+
+            <!-- Next Page -->
+            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                <a class="page-link" 
+                   href="/Listings?page=<%= currentPage + 1 %><%= queryString %>" 
+                   aria-label="Next">
+                    <span aria-hidden="true">Next &raquo;</span>
+                </a>
+            </li>
+
+            <!-- Last Page -->
+            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                <a class="page-link" 
+                   href="/Listings?page=<%= totalPages %><%= queryString %>" 
+                   aria-label="Last">
+                    <span aria-hidden="true">Last &raquo;&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+<% } %>
+
+<script src="/js/taxToggle.js"></script>

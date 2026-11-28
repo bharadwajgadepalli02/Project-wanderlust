@@ -1,12 +1,12 @@
+import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
+import MongoStore from "connect-mongo";
 import { Listing } from "./models/listing.js";
-import { data } from "./models/data.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import methodOverride from "method-override";
 import ejsmate from "ejs-mate";
-import wrapAsync from "./utils/wrapAsync.js";
 import ExpressError from "./utils/ExpressError.js";
 import session from "express-session";
 import flash from "connect-flash";
@@ -19,6 +19,9 @@ import { reviewRouter } from "./routes/reviewRoue.js";
 import { userRouter } from "./routes/userRoute.js";
 
 const app = express();
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "/views"));
@@ -30,40 +33,45 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "node_modules/bootstrap/dist")));
 app.use(express.static(path.join(__dirname, "node_modules/@fortawesome/fontawesome-free")));
 
-const PORT = 8080;
-const CONNECTION_URL = "mongodb://127.0.0.1:27017/wanderlust";
+const PORT = process.env.PORT || 8080;
+const CONNECTION_URL = process.env.ATLASDB_URL;
+const SECRET = process.env.SECRET || "mysupersecretcode12345";
 
-const main = wrapAsync(async (CONNECTION_URL) => {
-    await mongoose.connect(CONNECTION_URL);
-});
+const main = async (url) => {
+    await mongoose.connect(url);
+};
 
-const initdatabase = wrapAsync(async (bulkData = []) => {
-    await Listing.deleteMany({});
-    await Listing.insertMany(bulkData);
-});
-
-main(CONNECTION_URL, PORT)
+main(CONNECTION_URL)
     .then(() => {
         console.log("Database is connected successfully");
-        // initdatabase(data);
         app.listen(PORT, () => {
             console.log(`App is listening on port: ${PORT}`);
         });
     })
     .catch((error) => {
-        console.error(error);
+        console.error("Database connection error:", error);
     });
 
+const store = MongoStore.create({
+    mongoUrl: CONNECTION_URL,
+    touchAfter: 24 * 3600,
+});
+
+store.on("error", (err) => {
+    console.log("ERROR in MONGO SESSION STORE", err);
+});
+
 const sessionOptions = {
-    secret: "secretcode",
+    store,
+    secret: SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
         httpOnly: true,
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    }
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
 };
 
 app.use(session(sessionOptions));
@@ -84,18 +92,30 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-    res.redirect("/Listings");
+    return res.redirect("/Listings");
+});
+
+app.get("/help", (req, res) => {
+    return res.render("help.ejs");
 });
 
 app.use("/Listings", listingRouter);
 app.use("/Listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
 
+app.get("/favicon.ico", (req, res) => res.status(204).end());
+
 app.use((req, res, next) => {
     next(new ExpressError("sorry!, <b>Page Not Found.</b>", 404));
 });
 
 app.use((err, req, res, next) => {
+    if (err.statusCode !== 404) {
+        console.error("Unhandled Error:", err);
+    }
+    if (res.headersSent) {
+        return next(err);
+    }
     const { statusCode = 500, message = "Something went wrong" } = err;
-    res.status(statusCode).render("Listings/error.ejs", { message });
+    return res.status(statusCode).render("Listings/error.ejs", { message });
 });

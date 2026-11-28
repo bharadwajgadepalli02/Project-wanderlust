@@ -1,95 +1,143 @@
 <% layout('layouts/boilerplate.ejs') -%>
 <div class="row">
-    <div class="col-8 offset-2 mt-3">
-        <h3>Create new listing</h3>
+    <div class="col-8 offset-2 mt-3 mb-5">
+        <h3 class="fw-bold mb-3"><%= listing?._id ? 'Edit Listing' : 'Create new listing' %></h3>
         <form 
-            method="POST" class="needs-validation" novalidate
-            action="/Listings<%= listing._id ? `/${listing._id}?_method=PATCH` : '' %>">
+            method="POST" 
+            enctype="multipart/form-data"
+            class="needs-validation" 
+            novalidate
+            action="/Listings<%= listing?._id ? `/${listing._id}?_method=PATCH` : '' %>">
+            
             <div class="mb-3">
-                <label class="form-label" for="title">Title</label><br />
+                <label class="form-label fw-semibold" for="title">Title</label>
                 <input
                     name="listing[title]"
                     id="title"
                     placeholder="Enter an effective Title"
                     value="<%= listing?.title || '' %>"
                     class="form-control"
-                    aria-describedby="titleHelp"
                     required    
                 />
-                <div id="titleHelp" class="form-text">
-                    Please share a title to identify place
-                </div>
-                <div id="titleFeedback" class="invalid-feedback">
-                    Please choose a Title.
-                </div>
+                <div class="invalid-feedback">Please choose a Title.</div>
             </div>
+
             <div class="mb-3">
-                <label class="form-label" for="description">Description</label>
+                <label class="form-label fw-semibold" for="description">Description</label>
                 <textarea
                     placeholder="Provide Description"
                     class="form-control"
                     name="listing[description]"
                     id="description"
+                    rows="4"
                     required
                 ><%= listing?.description || '' %></textarea>
+                <div class="invalid-feedback">Please enter a short description.</div>
             </div>
+
             <div class="mb-3">
-                <label class="form-label" for="imageUrl">Image url</label><br />
+                <label class="form-label fw-semibold" for="category">Category</label>
+                <select name="listing[category]" id="category" class="form-select" required>
+                    <option value="" disabled <%= !listing?.category ? 'selected' : '' %>>Select a category</option>
+                    <% const categories = ["Trending", "Rooms", "Iconic Cities", "Mountains", "Castles", "Amazing Pools", "Camping", "Farms", "Arctic", "Domes", "Boats"]; %>
+                    <% for (let cat of categories) { %>
+                        <option value="<%= cat %>" <%= listing?.category === cat ? 'selected' : '' %>><%= cat %></option>
+                    <% } %>
+                </select>
+                <div class="invalid-feedback">Please select a category.</div>
+            </div>
+
+            <% if (listing?._id && ((typeof originalImageUrl !== 'undefined' && originalImageUrl) || listing?.image?.url)) { %>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold d-block">Original Listing Image</label>
+                    <img 
+                        src="<%= (typeof originalImageUrl !== 'undefined' && originalImageUrl) ? originalImageUrl : listing.image.url %>" 
+                        class="img-thumbnail rounded shadow-sm preview-thumbnail" 
+                        alt="Current listing image"
+                    />
+                </div>
+            <% } %>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold" for="image">
+                    <%= listing?._id ? 'Upload New Image (Optional)' : 'Upload Listing Image' %>
+                </label>
                 <input
-                    placeholder="represntation of place"
+                    type="file"
+                    name="listing[image]"
+                    id="image"
                     class="form-control"
-                    name="listing[image][url]"
-                    id="imageUrl"
-                    value="<%= listing?.image?.url || '' %>"
+                    <%= !listing?._id ? 'required' : '' %>
                 />
+                <div class="invalid-feedback">Please choose an image file.</div>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="price">Price</label><br />
-                <input
-                    placeholder="Eg: 20,000"
-                    class="form-control"
-                    name="listing[price]"
-                    id="price"
-                    value="<%= listing?.price || '' %>"
-                    required
-                />
+
+            <div class="row">
+                <div class="mb-3 col-md-4">
+                    <label class="form-label fw-semibold" for="price">Price (₹ / night)</label>
+                    <input
+                        placeholder="Eg: 2500"
+                        class="form-control"
+                        type="number"
+                        name="listing[price]"
+                        id="price"
+                        value="<%= listing?.price || '' %>"
+                        required
+                    />
+                    <div class="invalid-feedback">Please enter a valid price.</div>
+                    <small class="text-muted d-block mt-1">
+                        Total with <span id="taxRateLabel"><%= listing?.tax || 18 %></span>% GST: &#8377; <span id="taxedAmount" class="fw-semibold"><%= listing?.price ? Math.round(listing.price * (1 + (listing.tax || 18) / 100)).toLocaleString('en-IN') : '0' %></span>
+                    </small>
+                </div>
+
+                <div class="mb-3 col-md-3">
+                    <label class="form-label fw-semibold" for="taxSelect">Tax Rate (GST)</label>
+                    <% const currentTax = listing?.tax || 18; %>
+                    <select name="listing[tax]" id="taxSelect" class="form-select">
+                        <option value="5" <%= currentTax === 5 ? 'selected' : '' %>>5% (Standard Budget)</option>
+                        <option value="12" <%= currentTax === 12 ? 'selected' : '' %>>12% (Standard Mid)</option>
+                        <option value="18" <%= currentTax === 18 ? 'selected' : '' %>>18% (Standard Premium)</option>
+                        <option value="28" <%= currentTax === 28 ? 'selected' : '' %>>28% (Luxury / Resort)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 col-md-5">
+                    <label class="form-label fw-semibold" for="country">Country</label>
+                    <input
+                        placeholder="Eg: India"
+                        class="form-control"
+                        name="listing[country]"
+                        id="country"
+                        value="<%= listing?.country || '' %>"
+                        required
+                    />
+                    <div class="invalid-feedback">Please provide a valid country.</div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="location">Location</label><br />
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold" for="location">Location / City</label>
                 <input
-                    placeholder="Eg: Hyderabad"
+                    placeholder="Eg: Hyderabad, Goa, Aspen"
                     class="form-control"
                     name="listing[location]"
                     id="location"
                     value="<%= listing?.location || '' %>"
                     required
                 />
+                <div class="invalid-feedback">Please provide a valid location.</div>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="country">Country</label><br />
-                <input
-                    placeholder="Eg: India"
-                    class="form-control"
-                    name="listing[country]"
-                    id="country"
-                    value="<%= listing?.country || '' %>"
-                    required
-                />
-            </div>
-            <div class="buttons-view mb-3">
-                <button type="submit" class="btn btn-sm btn-primary">
-                    Submit
+
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <button type="submit" class="btn btn-theme px-4">
+                    <%= listing?._id ? 'Update Listing' : 'Publish Listing' %>
                 </button>
-                <a href="/Listings/" class="btn btn-sm btn-dark">
-                    Go to all Listings
+                <a href="/Listings" class="btn btn-secondary">
+                    Cancel
                 </a>
-                <% if (listing?._id) { %>
-                <a href="/Listings/<%= listing._id %>"
-                    class="btn btn-sm btn-info">
-                    Go Back To Listing
-                </a>
-                <% } %>
             </div>
         </form>
     </div>
 </div>
+
+<script src="/js/priceTax.js"></script>

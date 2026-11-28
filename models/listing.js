@@ -20,8 +20,40 @@ const listingSchema = new Schema({
         },
     },
     price: Number,
+    tax: {
+        type: Number,
+        default: () => [5, 12, 18, 28][Math.floor(Math.random() * 4)],
+    },
     location: String,
     country: String,
+    category: {
+        type: String,
+        enum: [
+            "Trending",
+            "Rooms",
+            "Iconic Cities",
+            "Mountains",
+            "Castles",
+            "Amazing Pools",
+            "Camping",
+            "Farms",
+            "Arctic",
+            "Domes",
+            "Boats",
+        ],
+        default: "Trending",
+    },
+    geometry: {
+        type: {
+            type: String,
+            enum: ["Point"],
+            default: "Point",
+        },
+        coordinates: {
+            type: [Number],
+            default: [77.2090, 28.6139],
+        },
+    },
     reviews: [
         {
             type: Schema.Types.ObjectId,
